@@ -1,0 +1,211 @@
+package dev.stacksizeconf.mixin;
+
+import java.util.function.Consumer;
+
+import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import dev.stacksizeconf.StackSizeConfig;
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+@Mixin(ItemStack.class)
+public abstract class ItemStackMixin {
+    /**
+     * When a stack of {@code N > 1} damageable items takes durability loss, vanilla applies the new damage to the whole
+     * stack. Split one item out, damage only that copy, equip it, and return the rest to inventory.
+     */
+    @Inject(
+            method = "applyDamage(ILnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void stacksizeconf$splitStackedDurabilityLoss(int newDamage, @Nullable LivingEntity entity, Consumer<Item> onBreak, CallbackInfo ci) {
+        if (!StackSizeConfig.stackOverridesEnabled()) {
+            return;
+        }
+        ItemStack self = (ItemStack) (Object) this;
+        if (self.getCount() <= 1 || !self.isDamageableItem()) {
+            return;
+        }
+        EquipmentSlot slot = stacksizeconf$findHoldingSlot(entity, self);
+        if (slot == null) {
+            return;
+        }
+        ci.cancel();
+        ItemStack used = self.copyWithCount(1);
+        self.shrink(1);
+        stacksizeconf$vanillaApplyDamageBody(used, newDamage, entity, onBreak);
+        entity.setItemSlot(slot, used.isEmpty() ? ItemStack.EMPTY : used);
+        if (!self.isEmpty()) {
+            if (entity instanceof Player player) {
+                // placeItemBackInInventory -> Inventory.add uses copyAndClear into the slot for damaged stacks,
+                // wiping existing merged stacks instead of growing them.
+                stacksizeconf$mergeRemainderIntoPlayerInventory(player, self);
+            } else if (entity.level() instanceof ServerLevel serverLevel) {
+                entity.spawnAtLocation(serverLevel, self);
+            }
+        }
+    }
+
+    /** Hotbar + storage (0–35) and offhand (40); same order idea as {@link Inventory#getSlotWithRemainingSpace}. */
+    @Unique
+    private static final int[] stacksizeconf$PLAYER_MERGE_SLOTS = buildPlayerMergeSlots();
+
+    @Unique
+    private static int[] buildPlayerMergeSlots() {
+        int[] slots = new int[37];
+        int i = 0;
+        for (int s = 0; s < 36; s++) {
+            slots[i++] = s;
+        }
+        slots[i] = 40;
+        return slots;
+    }
+
+    /**
+     * Merge like {@link Inventory#addResource} — grow matching slots — never {@link Inventory#add}'s damaged replace path.
+     */
+    @Unique
+    private static void stacksizeconf$mergeRemainderIntoPlayerInventory(Player player, ItemStack remainder) {
+        if (remainder.isEmpty()) {
+            return;
+        }
+        Inventory inv = player.getInventory();
+        while (!remainder.isEmpty()) {
+            boolean progressed = false;
+            for (int slot : stacksizeconf$PLAYER_MERGE_SLOTS) {
+                ItemStack dest = inv.getItem(slot);
+                if (dest == remainder) {
+                    continue;
+                }
+                if (!dest.isEmpty()
+                        && ItemStack.isSameItemSameComponents(remainder, dest)
+                        && dest.isStackable()) {
+                    int space = inv.getMaxStackSize(dest) - dest.getCount();
+                    if (space > 0) {
+                        int n = Math.min(space, remainder.getCount());
+                        dest.grow(n);
+                        remainder.shrink(n);
+                        dest.setPopTime(5);
+                        stacksizeconf$notifyInventorySlot(player, slot);
+                        progressed = true;
+                        break;
+                    }
+                }
+            }
+            if (remainder.isEmpty()) {
+                break;
+            }
+            if (!progressed) {
+                int free = inv.getFreeSlot();
+                if (free == -1 && inv.getItem(40).isEmpty()) {
+                    free = 40;
+                }
+                if (free == -1) {
+                    player.drop(remainder, false);
+                    remainder.setCount(0);
+                    break;
+                }
+                int cap = inv.getMaxStackSize(remainder);
+                int move = Math.min(remainder.getCount(), cap);
+                inv.setItem(free, remainder.split(move));
+                inv.getItem(free).setPopTime(5);
+                stacksizeconf$notifyInventorySlot(player, free);
+            }
+        }
+    }
+
+    @Unique
+    private static void stacksizeconf$notifyInventorySlot(Player player, int slot) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.connection.send(serverPlayer.getInventory().createInventoryUpdatePacket(slot));
+        }
+    }
+
+    /**
+     * Mirrors private {@code ItemStack.applyDamage} for a split single item (Invoker not available on this toolchain).
+     */
+    @Unique
+    private static void stacksizeconf$vanillaApplyDamageBody(ItemStack stack, int newDamage, @Nullable LivingEntity entity, Consumer<Item> onBreak) {
+        if (entity instanceof ServerPlayer serverPlayer) {
+            CriteriaTriggers.ITEM_DURABILITY_CHANGED.trigger(serverPlayer, stack, newDamage);
+        }
+        stack.setDamageValue(newDamage);
+        if (stack.isBroken()) {
+            Item item = stack.getItem();
+            stack.shrink(1);
+            onBreak.accept(item);
+        }
+    }
+
+    @Unique
+    private static @Nullable EquipmentSlot stacksizeconf$findHoldingSlot(@Nullable LivingEntity entity, ItemStack stack) {
+        if (entity == null) {
+            return null;
+        }
+        for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
+            if (entity.getItemBySlot(equipmentSlot) == stack) {
+                return equipmentSlot;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * When {@code > 0}, {@link ItemStack#getMaxStackSize()} returns its vanilla value so we can read it
+     * while computing {@link ItemStack#isStackable()} without recursion or double-applying the config.
+     */
+    @Unique
+    private static final ThreadLocal<Integer> stacksizeconf$SKIP_MAX_MIXIN = ThreadLocal.withInitial(() -> 0);
+
+    @Inject(method = "getMaxStackSize", at = @At("RETURN"), cancellable = true)
+    private void stacksizeconf$modifyMaxStack(CallbackInfoReturnable<Integer> cir) {
+        if (!StackSizeConfig.stackOverridesEnabled()) {
+            return;
+        }
+        ItemStack self = (ItemStack) (Object) this;
+        if (self.isEmpty() || stacksizeconf$SKIP_MAX_MIXIN.get() > 0) {
+            return;
+        }
+        cir.setReturnValue(StackSizeConfig.applyToVanillaMax(cir.getReturnValue()));
+    }
+
+    /**
+     * Vanilla {@code isStackable()} requires max stack {@code > 1} and (for damageable items) no damage,
+     * which prevents tools and armor from ever stacking. After our max-stack change, use
+     * {@code effectiveMax > 1} only; merging still requires identical components (same state).
+     */
+    @Inject(method = "isStackable", at = @At("HEAD"), cancellable = true)
+    private void stacksizeconf$isStackable(CallbackInfoReturnable<Boolean> cir) {
+        if (!StackSizeConfig.stackOverridesEnabled()) {
+            return;
+        }
+        ItemStack self = (ItemStack) (Object) this;
+        if (self.isEmpty()) {
+            return;
+        }
+        int depth = stacksizeconf$SKIP_MAX_MIXIN.get();
+        stacksizeconf$SKIP_MAX_MIXIN.set(depth + 1);
+        try {
+            int vanillaMax = self.getMaxStackSize();
+            int effectiveMax = StackSizeConfig.applyToVanillaMax(vanillaMax);
+            cir.setReturnValue(effectiveMax > 1);
+            cir.cancel();
+        } finally {
+            stacksizeconf$SKIP_MAX_MIXIN.set(depth);
+        }
+    }
+}

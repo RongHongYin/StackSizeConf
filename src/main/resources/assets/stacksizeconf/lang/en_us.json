@@ -1,0 +1,6 @@
+{
+  "stacksizeconf.config.enable_stack_overrides": "Enable stack size changes",
+  "stacksizeconf.config.stack_size_multiplier": "Stack size multiplier",
+  "stacksizeconf.config.non_stackable_base_max": "Base max for vanilla non-stackables",
+  "stacksizeconf.config.max_stack_hard_cap": "Global max stack (ceiling)"
+}
