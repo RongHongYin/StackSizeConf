@@ -3,9 +3,10 @@ license="${mod_license}"
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"
-displayName="${mod_name}"
+# ASCII-only escape sequence so the name is correct in-game even if Gradle expands resources with a wrong charset on Windows
+displayName="\u5b9e\u7528\u5de5\u5177\u7bb1"
 description='''
-Configurable item stack sizes: applies to all items (including vanilla non-stackables). Merging still requires identical item data.
+Multiple small utilities in one mod. Includes configurable item stack sizes (all items, including vanilla non-stackables); more modules can be toggled in the config screen. Merging still requires identical item data.
 '''
 [[mixins]]
 config="${mod_id}.mixins.json"

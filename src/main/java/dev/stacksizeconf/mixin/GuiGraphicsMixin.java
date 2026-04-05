@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import dev.stacksizeconf.StackSizeConfig;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
@@ -21,6 +22,9 @@ public abstract class GuiGraphicsMixin {
 
     @Inject(method = "renderItemCount", at = @At("HEAD"), cancellable = true)
     private void stacksizeconf$scaledItemCount(Font font, ItemStack stack, int x, int y, @Nullable String text, CallbackInfo ci) {
+        if (!StackSizeConfig.stackOverridesEnabled()) {
+            return;
+        }
         if (stack.getCount() == 1 && text == null) {
             return;
         }

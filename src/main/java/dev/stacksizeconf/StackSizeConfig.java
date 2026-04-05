@@ -31,6 +31,28 @@ public final class StackSizeConfig {
             .translation("stacksizeconf.config.max_stack_hard_cap")
             .defineInRange("maxStackHardCap", 1024, 1, 65536);
 
+    public static final ModConfigSpec.BooleanValue ENABLE_LIGHT_LEVEL_OVERLAY = BUILDER
+            .comment("When false, the light overlay hotkey does nothing (client-only).")
+            .translation("stacksizeconf.config.enable_light_level_overlay")
+            .define("enableLightLevelOverlay", true);
+
+    public static final ModConfigSpec.EnumValue<LightOverlayBrightnessMode> LIGHT_OVERLAY_BRIGHTNESS_MODE = BUILDER
+            .comment(
+                    "BLOCK: show block light only (good for torches). COMBINED: vanilla combined brightness (night surface often ~4 with no torches)."
+            )
+            .translation("stacksizeconf.config.light_overlay_brightness_mode")
+            .defineEnum("lightOverlayBrightnessMode", LightOverlayBrightnessMode.BLOCK);
+
+    public static final ModConfigSpec.IntValue LIGHT_OVERLAY_HORIZONTAL_RANGE = BUILDER
+            .comment("Light overlay: horizontal extent in blocks from the player (square, Chebyshev radius).")
+            .translation("stacksizeconf.config.light_overlay_horizontal_range")
+            .defineInRange("lightLevelOverlayHorizontalRange", 16, 4, 48);
+
+    public static final ModConfigSpec.IntValue LIGHT_OVERLAY_VERTICAL_RANGE = BUILDER
+            .comment("Light overlay: blocks above/below feet Y to scan for floor surfaces.")
+            .translation("stacksizeconf.config.light_overlay_vertical_range")
+            .defineInRange("lightLevelOverlayVerticalRange", 3, 0, 16);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 
     private StackSizeConfig() {

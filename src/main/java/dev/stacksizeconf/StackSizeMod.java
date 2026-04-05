@@ -16,6 +16,10 @@ public final class StackSizeMod {
 
     public StackSizeMod(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.COMMON, StackSizeConfig.SPEC);
-        LOGGER.info("Stack sizes: Main Menu -> Mods -> Stack Size Config -> Config, or config/{}-common.toml", MOD_ID);
+        LOGGER.info(
+                "Toolbox config: Mods -> {} -> Config, or config/{}-common.toml",
+                modContainer.getModInfo().getDisplayName(),
+                MOD_ID
+        );
     }
 }
