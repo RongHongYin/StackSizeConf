@@ -5,6 +5,7 @@
   "mixins": [
     "ContainerMixin",
     "ItemStackMixin",
+    "ItemEntityMixin",
     "ExtraCodecsMixin",
     "SlotMixin",
     "ServerboundSetCreativeModeSlotPacketMixin"

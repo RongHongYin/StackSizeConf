@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import dev.stacksizeconf.StackSizeConfig;
+import dev.stacksizeconf.HandheldShulkerHandler;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,8 +19,11 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
@@ -197,6 +201,11 @@ public abstract class ItemStackMixin {
         if (self.isEmpty()) {
             return;
         }
+        if (stacksizeconf$isNonEmptyShulkerBox(self)) {
+            cir.setReturnValue(false);
+            cir.cancel();
+            return;
+        }
         int depth = stacksizeconf$SKIP_MAX_MIXIN.get();
         stacksizeconf$SKIP_MAX_MIXIN.set(depth + 1);
         try {
@@ -207,5 +216,14 @@ public abstract class ItemStackMixin {
         } finally {
             stacksizeconf$SKIP_MAX_MIXIN.set(depth);
         }
+    }
+
+    @Unique
+    private static boolean stacksizeconf$isNonEmptyShulkerBox(ItemStack stack) {
+        if (!(stack.getItem() instanceof BlockItem blockItem) || !(blockItem.getBlock() instanceof ShulkerBoxBlock)) {
+            return false;
+        }
+        ItemContainerContents contents = stack.getOrDefault(net.minecraft.core.component.DataComponents.CONTAINER, ItemContainerContents.EMPTY);
+        return !contents.equals(ItemContainerContents.EMPTY);
     }
 }

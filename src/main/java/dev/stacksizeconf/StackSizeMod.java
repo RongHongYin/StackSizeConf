@@ -8,6 +8,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.NeoForge;
 
 @Mod(StackSizeMod.MOD_ID)
 public final class StackSizeMod {
@@ -16,6 +17,8 @@ public final class StackSizeMod {
 
     public StackSizeMod(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.COMMON, StackSizeConfig.SPEC);
+        NeoForge.EVENT_BUS.addListener(ItemMagnetHandler::onPlayerTick);
+        NeoForge.EVENT_BUS.addListener(HandheldShulkerHandler::onRightClickItem);
         LOGGER.info(
                 "Toolbox config: Mods -> {} -> Config, or config/{}-common.toml",
                 modContainer.getModInfo().getDisplayName(),

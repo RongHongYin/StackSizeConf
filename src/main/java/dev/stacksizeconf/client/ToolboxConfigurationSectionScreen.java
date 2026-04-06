@@ -49,6 +49,22 @@ public final class ToolboxConfigurationSectionScreen extends ConfigurationScreen
      */
     private static final int OPTIONS_ROW_FULL_WIDTH = 320;
 
+    /** Keys belonging to the "自动拾取" module (order = display order). */
+    private static final List<String> CUSTOM_ITEM_MAGNET_KEYS = List.of(
+            "enableItemMagnet",
+            "itemMagnetRange"
+    );
+
+    /** Keys belonging to the "手持潜影盒" module (order = display order). */
+    private static final List<String> HANDHELD_SHULKER_KEYS = List.of(
+            "enableHandheldShulkerOpen",
+            "shulkerOpenRequireSneak",
+            "shulkerOpenAllowOffhand",
+            "shulkerOpenAllowRidingOrFlying",
+            "shulkerOpenPlaySound",
+            "shulkerOpenServerValidation"
+    );
+
     /** Keys belonging to the "自定义堆叠" module (order = display order). */
     private static final List<String> CUSTOM_STACK_KEYS = List.of(
             "enableStackSizeOverrides",
@@ -67,6 +83,7 @@ public final class ToolboxConfigurationSectionScreen extends ConfigurationScreen
 
     private @Nullable KeyMapping keyCaptureTarget;
     private @Nullable LightOverlayHotkeyRowWidget overlayHotkeyRow;
+    private boolean installedCustomGlobalReset;
 
     public ToolboxConfigurationSectionScreen(Screen parent, ModConfig.Type type, ModConfig modConfig, Component title) {
         super(parent, type, modConfig, title);
@@ -93,6 +110,24 @@ public final class ToolboxConfigurationSectionScreen extends ConfigurationScreen
         boolean hasUndoableElements = false;
 
         Set<String> inModules = new HashSet<>();
+
+        // --- 自动拾取 module ---
+        if (findEntryByKey(context, CUSTOM_ITEM_MAGNET_KEYS.getFirst()) != null) {
+            addModuleHeaderRow(Component.translatable("stacksizeconf.module.item_magnet"), CUSTOM_ITEM_MAGNET_KEYS);
+            for (String key : CUSTOM_ITEM_MAGNET_KEYS) {
+                inModules.add(key);
+                hasUndoableElements |= appendConfigRow(key);
+            }
+        }
+
+        // --- 手持潜影盒 module ---
+        if (findEntryByKey(context, HANDHELD_SHULKER_KEYS.getFirst()) != null) {
+            addModuleHeaderRow(Component.translatable("stacksizeconf.module.handheld_shulker"), HANDHELD_SHULKER_KEYS);
+            for (String key : HANDHELD_SHULKER_KEYS) {
+                inModules.add(key);
+                hasUndoableElements |= appendConfigRow(key);
+            }
+        }
 
         // --- 自定义堆叠 module ---
         addModuleHeaderRow(Component.translatable("stacksizeconf.module.custom_stack"), CUSTOM_STACK_KEYS);
@@ -129,7 +164,60 @@ public final class ToolboxConfigurationSectionScreen extends ConfigurationScreen
             createUndoButton();
             createResetButton();
         }
+        installCustomGlobalResetButtonIfNeeded();
         return this;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void resetAllModSettings() {
+        LightLevelOverlay.resetHotkeyToDefault();
+        List batch = new ArrayList<>();
+        for (UnmodifiableConfig.Entry entry : context.entries()) {
+            String key = entry.getKey();
+            if (!(entry.getRawValue() instanceof final ModConfigSpec.ConfigValue cv)
+                    || (getValueSpec(key) instanceof ListValueSpec)) {
+                continue;
+            }
+            ValueSpec spec = getValueSpec(key);
+            if (spec == null) {
+                continue;
+            }
+            Object def = spec.correct(null);
+            Object raw = cv.getRaw();
+            if (!Objects.equals(raw, def)) {
+                batch.add(undoManager.step(
+                        v -> {
+                            cv.set(v);
+                            onChanged(key);
+                        },
+                        def,
+                        v -> {
+                            cv.set(v);
+                            onChanged(key);
+                        },
+                        raw));
+            }
+        }
+        if (!batch.isEmpty()) {
+            undoManager.add(batch);
+        }
+        rebuild();
+    }
+
+    private void installCustomGlobalResetButtonIfNeeded() {
+        if (installedCustomGlobalReset || resetButton == null) {
+            return;
+        }
+        Button old = resetButton;
+        old.visible = false;
+        old.active = false;
+        Button custom = Button.builder(ConfigurationScreen.RESET, b -> resetAllModSettings())
+                .pos(old.getX(), old.getY())
+                .size(old.getWidth(), old.getHeight())
+                .tooltip(Tooltip.create(Component.translatable("stacksizeconf.reset_all.tooltip")))
+                .build();
+        resetButton = addRenderableWidget(custom);
+        installedCustomGlobalReset = true;
     }
 
     private Element createLightOverlayHotkeyElement() {
