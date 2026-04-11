@@ -8,17 +8,12 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-
 public final class ItemMagnetHandler {
     private ItemMagnetHandler() {
     }
 
-    public static void onPlayerTick(PlayerTickEvent.Post event) {
+    public static void tickPlayer(ServerPlayer player) {
         if (!StackSizeConfig.ENABLE_ITEM_MAGNET.get()) {
-            return;
-        }
-        if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
         if (player.isSpectator() || !player.isAlive()) {

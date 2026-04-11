@@ -1,7 +1,5 @@
 package dev.stacksizeconf.mixin;
 
-import java.util.function.Consumer;
-
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -12,31 +10,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import dev.stacksizeconf.StackSizeConfig;
 import dev.stacksizeconf.HandheldShulkerHandler;
-import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
+    @Unique
+    private static final ThreadLocal<Boolean> stacksizeconf$HURT_RECURSE = ThreadLocal.withInitial(() -> false);
+
     /**
-     * When a stack of {@code N > 1} damageable items takes durability loss, vanilla applies the new damage to the whole
-     * stack. Split one item out, damage only that copy, equip it, and return the rest to inventory.
+     * When a stack of {@code N > 1} damageable items takes durability loss, vanilla applies damage to the whole stack.
+     * Split one item out, run vanilla {@link ItemStack#hurtAndBreak} on that copy, then merge the remainder.
      */
     @Inject(
-            method = "applyDamage(ILnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V",
+            method = "hurtAndBreak(ILnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V",
             at = @At("HEAD"),
             cancellable = true
     )
-    private void stacksizeconf$splitStackedDurabilityLoss(int newDamage, @Nullable LivingEntity entity, Consumer<Item> onBreak, CallbackInfo ci) {
+    private void stacksizeconf$splitStackedDurabilityLoss(int amount, LivingEntity entity, EquipmentSlot slot, CallbackInfo ci) {
+        if (Boolean.TRUE.equals(stacksizeconf$HURT_RECURSE.get())) {
+            return;
+        }
         if (!StackSizeConfig.stackOverridesEnabled()) {
             return;
         }
@@ -44,22 +48,24 @@ public abstract class ItemStackMixin {
         if (self.getCount() <= 1 || !self.isDamageableItem()) {
             return;
         }
-        EquipmentSlot slot = stacksizeconf$findHoldingSlot(entity, self);
-        if (slot == null) {
+        if (stacksizeconf$findHoldingSlot(entity, self) != slot) {
             return;
         }
         ci.cancel();
         ItemStack used = self.copyWithCount(1);
         self.shrink(1);
-        stacksizeconf$vanillaApplyDamageBody(used, newDamage, entity, onBreak);
-        entity.setItemSlot(slot, used.isEmpty() ? ItemStack.EMPTY : used);
+        entity.setItemSlot(slot, used);
+        stacksizeconf$HURT_RECURSE.set(true);
+        try {
+            entity.getItemBySlot(slot).hurtAndBreak(amount, entity, slot);
+        } finally {
+            stacksizeconf$HURT_RECURSE.set(false);
+        }
         if (!self.isEmpty()) {
             if (entity instanceof Player player) {
-                // placeItemBackInInventory -> Inventory.add uses copyAndClear into the slot for damaged stacks,
-                // wiping existing merged stacks instead of growing them.
                 stacksizeconf$mergeRemainderIntoPlayerInventory(player, self);
             } else if (entity.level() instanceof ServerLevel serverLevel) {
-                entity.spawnAtLocation(serverLevel, self);
+                entity.spawnAtLocation(serverLevel, self.copy());
             }
         }
     }
@@ -135,23 +141,9 @@ public abstract class ItemStackMixin {
     @Unique
     private static void stacksizeconf$notifyInventorySlot(Player player, int slot) {
         if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.connection.send(serverPlayer.getInventory().createInventoryUpdatePacket(slot));
-        }
-    }
-
-    /**
-     * Mirrors private {@code ItemStack.applyDamage} for a split single item (Invoker not available on this toolchain).
-     */
-    @Unique
-    private static void stacksizeconf$vanillaApplyDamageBody(ItemStack stack, int newDamage, @Nullable LivingEntity entity, Consumer<Item> onBreak) {
-        if (entity instanceof ServerPlayer serverPlayer) {
-            CriteriaTriggers.ITEM_DURABILITY_CHANGED.trigger(serverPlayer, stack, newDamage);
-        }
-        stack.setDamageValue(newDamage);
-        if (stack.isBroken()) {
-            Item item = stack.getItem();
-            stack.shrink(1);
-            onBreak.accept(item);
+            AbstractContainerMenu menu = serverPlayer.inventoryMenu;
+            serverPlayer.connection.send(
+                    new ClientboundContainerSetSlotPacket(menu.containerId, menu.incrementStateId(), slot, serverPlayer.getInventory().getItem(slot)));
         }
     }
 

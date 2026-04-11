@@ -1,25 +1,35 @@
 package dev.stacksizeconf;
 
-import com.mojang.datafixers.util.Function4;
+import org.lwjgl.glfw.GLFW;
 
-import dev.stacksizeconf.client.LightLevelOverlay;
-import dev.stacksizeconf.client.ToolboxConfigurationSectionScreen;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.neoforge.client.gui.ConfigurationScreen;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 
-@Mod(value = StackSizeMod.MOD_ID, dist = Dist.CLIENT)
-public final class StackSizeModClient {
-    public StackSizeModClient(IEventBus modEventBus, ModContainer container) {
-        LightLevelOverlay.register(modEventBus);
-        Function4<ConfigurationScreen, ModConfig.Type, ModConfig, Component, Screen> openToolboxSection =
-                (root, type, modConfig, title) -> new ToolboxConfigurationSectionScreen(root, type, modConfig, title);
-        container.registerExtensionPoint(IConfigScreenFactory.class, (c, parent) -> new ConfigurationScreen(c, parent, openToolboxSection));
+import com.mojang.blaze3d.platform.InputConstants;
+
+import dev.stacksizeconf.client.ToolboxConfigScreen;
+
+@Environment(EnvType.CLIENT)
+public final class StackSizeModClient implements ClientModInitializer {
+    private static KeyMapping openConfigKey;
+
+    @Override
+    public void onInitializeClient() {
+        openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.stacksizeconf.open_config",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_O,
+                KeyMapping.Category.MISC));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (openConfigKey.consumeClick()) {
+                Minecraft mc = Minecraft.getInstance();
+                mc.setScreen(ToolboxConfigScreen.create(mc.screen));
+            }
+        });
     }
 }

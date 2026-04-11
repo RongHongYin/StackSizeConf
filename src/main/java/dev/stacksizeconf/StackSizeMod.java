@@ -4,25 +4,29 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.neoforge.common.NeoForge;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
-@Mod(StackSizeMod.MOD_ID)
-public final class StackSizeMod {
+public final class StackSizeMod implements ModInitializer {
     public static final String MOD_ID = "stacksizeconf";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public StackSizeMod(IEventBus modEventBus, ModContainer modContainer) {
-        modContainer.registerConfig(ModConfig.Type.COMMON, StackSizeConfig.SPEC);
-        NeoForge.EVENT_BUS.addListener(ItemMagnetHandler::onPlayerTick);
-        NeoForge.EVENT_BUS.addListener(HandheldShulkerHandler::onRightClickItem);
-        LOGGER.info(
-                "Toolbox config: Mods -> {} -> Config, or config/{}-common.toml",
-                modContainer.getModInfo().getDisplayName(),
-                MOD_ID
-        );
+    @Override
+    public void onInitialize() {
+        StackSizeConfigPersistence.load();
+        UseItemCallback.EVENT.register(HandheldShulkerHandler::onUseItem);
+        ServerTickEvents.END_WORLD_TICK.register(StackSizeMod::onEndWorldTick);
+        ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> HandheldShulkerHandler.clearOpeningState(oldPlayer));
+        LOGGER.info("Initialized {} (Fabric).", MOD_ID);
+    }
+
+    private static void onEndWorldTick(ServerLevel level) {
+        for (ServerPlayer player : level.players()) {
+            ItemMagnetHandler.tickPlayer(player);
+        }
     }
 }

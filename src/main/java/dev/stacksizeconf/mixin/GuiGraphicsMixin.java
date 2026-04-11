@@ -19,8 +19,11 @@ public abstract class GuiGraphicsMixin {
     /** ~width of bottom-right count area inside a 16px slot */
     private static final int MAX_COUNT_TEXT_WIDTH = 15;
     private static final float MIN_SCALE = 0.38f;
-
-    @Inject(method = "renderItemCount", at = @At("HEAD"), cancellable = true)
+    @Inject(
+            method = "renderItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
     private void stacksizeconf$scaledItemCount(Font font, ItemStack stack, int x, int y, @Nullable String text, CallbackInfo ci) {
         if (!StackSizeConfig.stackOverridesEnabled()) {
             return;
@@ -39,12 +42,14 @@ public abstract class GuiGraphicsMixin {
         }
         ci.cancel();
         GuiGraphics self = (GuiGraphics) (Object) this;
-        int left = x + 19 - 2 - w;
-        int top = y + 6 + 3;
+        // Anchor bottom-right like vanilla so scaling shrinks into the corner, not left into the item icon.
+        float brX = x + 19 - 2f;
+        float brY = y + 6 + 3f + font.lineHeight;
+        // 1.21.11+ GuiGraphics uses a 2D pose stack (no Z); anchor and scale like vanilla bottom-right.
         self.pose().pushMatrix();
-        self.pose().translate(left, top);
+        self.pose().translate(brX, brY);
         self.pose().scale(scale, scale);
-        self.drawString(font, s, 0, 0, 0xFFFFFFFF, true);
+        self.drawString(font, s, -w, -font.lineHeight, 0xFFFFFFFF, true);
         self.pose().popMatrix();
     }
 }

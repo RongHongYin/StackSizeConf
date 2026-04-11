@@ -1,7 +1,6 @@
 plugins {
-    id 'java-library'
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.1.21'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -11,13 +10,16 @@ tasks.named('wrapper', Wrapper).configure {
 version = mod_version
 group = mod_group_id
 
-sourceSets.main.resources {
-    srcDir('src/generated/resources')
-    exclude("**/*.bbmodel")
-    exclude("src/generated/**/.cache")
-}
-
 repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+    maven { url = 'https://maven.nucleoid.xyz/' }
+    maven {
+        url = 'https://api.modrinth.com/maven'
+        content {
+            includeGroup 'maven.modrinth'
+        }
+    }
+    maven { url = 'https://maven.architectury.dev/' }
 }
 
 base {
@@ -26,54 +28,34 @@ base {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-        modSource project.sourceSets.main
-    }
-
-    client {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    server {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        argument '--nogui'
-    }
-
-    gameTestServer {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    clientData {
-        arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-    }
-}
-
-configurations {
-    runtimeClasspath.extendsFrom localRuntime
-}
-
 dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    modImplementation "io.github.llamalad7:mixinextras-fabric:${mixin_extras_version}"
+    annotationProcessor "io.github.llamalad7:mixinextras-common:${mixin_extras_version}"
+    compileOnly "org.jspecify:jspecify:1.0.0"
+    // Cloth Config not JiJ'd: avoids duplicate AutoConfig/Cloth stacks with mods like AppleSkin (nested JAR init order).
+    modImplementation("maven.modrinth:cloth-config:${cloth_config_version}+fabric") {
+        exclude group: 'net.fabricmc.fabric-api'
+    }
+    modImplementation "me.shedaniel.cloth:basic-math:${cloth_basic_math_version}"
 }
 
-tasks.withType(ProcessResources).configureEach {
-    filteringCharset = 'UTF-8'
-    var replaceProperties = [
-            minecraft_version         : minecraft_version,
-            minecraft_version_range   : minecraft_version_range,
-            neo_version               : neo_version,
-            neo_version_range         : neo_version_range,
-            mod_id                    : mod_id,
-            mod_license               : mod_license,
-            mod_version               : mod_version,
+tasks.named('processResources').configure {
+    def fabricModJsonExpand = [
+            "version"          : project.version.toString(),
+            "mod_id"           : (findProperty("mod_id") ?: "").toString(),
+            "mod_name"         : (findProperty("mod_name") ?: "").toString(),
+            "mod_license"      : (findProperty("mod_license") ?: "").toString(),
+            "loader_version"   : (findProperty("loader_version") ?: "").toString(),
+            "minecraft_version": (findProperty("minecraft_version") ?: "").toString(),
     ]
-    inputs.properties replaceProperties
-
-    filesMatching(['META-INF/neoforge.mods.toml']) {
-        expand replaceProperties
+    inputs.property "version", fabricModJsonExpand["version"]
+    filteringCharset = 'UTF-8'
+    filesMatching("fabric.mod.json") {
+        expand(fabricModJsonExpand)
     }
 }
 
@@ -92,11 +74,4 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-}
-
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
-    }
 }

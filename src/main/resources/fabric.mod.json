@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${version}",
+  "name": "${mod_name}",
+  "description": "Multiple toolbox utilities: custom stack size, auto pickup, handheld shulker.",
+  "authors": [
+    "RongHongYin"
+  ],
+  "license": "${mod_license}",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.stacksizeconf.StackSizeMod"
+    ],
+    "client": [
+      "dev.stacksizeconf.StackSizeModClient"
+    ]
+  },
+  "mixins": [
+    "stacksizeconf.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "fabric-api": "*",
+    "cloth-config": ">=15.0.0",
+    "java": ">=21"
+  }
+}

@@ -14,6 +14,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
@@ -21,7 +22,6 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public final class HandheldShulkerHandler {
     private static final Set<UUID> OPENING_PLAYERS = ConcurrentHashMap.newKeySet();
@@ -29,31 +29,30 @@ public final class HandheldShulkerHandler {
     private HandheldShulkerHandler() {
     }
 
-    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) {
-            return;
-        }
+    /** Fabric {@code UseItemCallback} returns {@link InteractionResult} as of 1.21.11; stack changes are applied directly to the hand. */
+    public static InteractionResult onUseItem(Player playerEntity, Level level, InteractionHand hand) {
         if (!StackSizeConfig.ENABLE_HANDHELD_SHULKER_OPEN.get()) {
-            return;
+            return InteractionResult.PASS;
         }
-        InteractionHand hand = event.getHand();
         if (!StackSizeConfig.SHULKER_OPEN_ALLOW_OFFHAND.get() && hand == InteractionHand.OFF_HAND) {
-            return;
+            return InteractionResult.PASS;
         }
-        ItemStack held = player.getItemInHand(hand);
+        ItemStack held = playerEntity.getItemInHand(hand);
         if (!isShulkerBoxItem(held)) {
-            return;
+            return InteractionResult.PASS;
+        }
+        if (!(playerEntity instanceof ServerPlayer player)) {
+            return InteractionResult.SUCCESS;
         }
         if (held.getCount() > 1) {
             held = splitHeldStackForOpening(player, hand, held);
         }
         if (!passesOpenChecks(player)) {
-            return;
+            return InteractionResult.PASS;
         }
 
         openHandheldShulker(player, hand, held.copy());
-        event.setCanceled(true);
-        event.setCancellationResult(InteractionResult.SUCCESS);
+        return InteractionResult.SUCCESS;
     }
 
     private static boolean passesOpenChecks(ServerPlayer player) {
@@ -113,7 +112,7 @@ public final class HandheldShulkerHandler {
             return;
         }
         Inventory inv = player.getInventory();
-        int handSlot = hand == InteractionHand.MAIN_HAND ? inv.getSelectedSlot() : 40;
+        int handSlot = hand == InteractionHand.MAIN_HAND ? inv.getSelectedSlot() : Inventory.SLOT_OFFHAND;
         for (int slot = 0; slot < inv.getContainerSize(); slot++) {
             if (slot == handSlot) {
                 continue;
@@ -146,6 +145,8 @@ public final class HandheldShulkerHandler {
         if (!remainder.isEmpty()) {
             if (player.level() instanceof ServerLevel serverLevel) {
                 player.spawnAtLocation(serverLevel, remainder.copy());
+            } else {
+                player.drop(remainder.copy(), false);
             }
             remainder.setCount(0);
         }
@@ -153,6 +154,10 @@ public final class HandheldShulkerHandler {
 
     public static boolean playerHasOpenLockedShulker(Player player) {
         return OPENING_PLAYERS.contains(player.getUUID());
+    }
+
+    public static void clearOpeningState(Player player) {
+        OPENING_PLAYERS.remove(player.getUUID());
     }
 
     private static final class HandheldShulkerMenu extends ShulkerBoxMenu {
