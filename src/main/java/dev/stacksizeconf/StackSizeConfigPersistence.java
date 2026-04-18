@@ -53,6 +53,7 @@ public final class StackSizeConfigPersistence {
         o.addProperty("shulker_open_allow_riding_or_flying", StackSizeConfig.SHULKER_OPEN_ALLOW_RIDING_OR_FLYING.get());
         o.addProperty("shulker_open_play_sound", StackSizeConfig.SHULKER_OPEN_PLAY_SOUND.get());
         o.addProperty("shulker_open_server_validation", StackSizeConfig.SHULKER_OPEN_SERVER_VALIDATION.get());
+        o.addProperty("hopper_transfer_speed_multiplier", StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER.get());
         return o;
     }
 
@@ -69,6 +70,7 @@ public final class StackSizeConfigPersistence {
         getBool(o, "shulker_open_allow_riding_or_flying", StackSizeConfig.SHULKER_OPEN_ALLOW_RIDING_OR_FLYING);
         getBool(o, "shulker_open_play_sound", StackSizeConfig.SHULKER_OPEN_PLAY_SOUND);
         getBool(o, "shulker_open_server_validation", StackSizeConfig.SHULKER_OPEN_SERVER_VALIDATION);
+        getDouble(o, "hopper_transfer_speed_multiplier", StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER, 0.1D, 128D);
     }
 
     private static void getBool(JsonObject o, String key, StackSizeConfig.Value<Boolean> target) {

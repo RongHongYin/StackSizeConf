@@ -45,6 +45,15 @@ public final class ToolboxConfigScreen {
                 .setSaveConsumer(StackSizeConfig.MAX_STACK_HARD_CAP::set)
                 .build());
 
+        ConfigCategory hopper = builder.getOrCreateCategory(Component.translatable("stacksizeconf.config.category.hopper"));
+        hopper.addEntry(eb.startTextDescription(Component.translatable("stacksizeconf.config.hint.hopper_speed")).build());
+        hopper.addEntry(eb.startDoubleField(Component.translatable("stacksizeconf.config.hopper_transfer_speed_multiplier"), StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER.get())
+                .setDefaultValue(1.0D)
+                .setMin(0.1D)
+                .setMax(128D)
+                .setSaveConsumer(StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER::set)
+                .build());
+
         ConfigCategory magnet = builder.getOrCreateCategory(Component.translatable("stacksizeconf.config.category.magnet"));
         magnet.addEntry(eb.startBooleanToggle(Component.translatable("stacksizeconf.config.enable_item_magnet"), StackSizeConfig.ENABLE_ITEM_MAGNET.get())
                 .setDefaultValue(true)

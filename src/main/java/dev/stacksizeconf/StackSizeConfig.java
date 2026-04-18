@@ -1,5 +1,10 @@
 package dev.stacksizeconf;
 
+import net.minecraft.util.Mth;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
 public final class StackSizeConfig {
     public static final Value<Boolean> ENABLE_STACK_OVERRIDES = Value.of(true);
     public static final Value<Double> STACK_SIZE_MULTIPLIER = Value.of(2.0D);
@@ -16,6 +21,12 @@ public final class StackSizeConfig {
     public static final Value<Boolean> SHULKER_OPEN_PLAY_SOUND = Value.of(true);
     public static final Value<Boolean> SHULKER_OPEN_SERVER_VALIDATION = Value.of(true);
 
+    /**
+     * Vanilla hopper waits {@code TransferCooldown} ticks (typically 8) after each transfer; higher values move
+     * items in and out more often. {@code 1.0} matches vanilla.
+     */
+    public static final Value<Double> HOPPER_TRANSFER_SPEED_MULTIPLIER = Value.of(1.0D);
+
     private StackSizeConfig() {}
 
     public static boolean stackOverridesEnabled() {
@@ -31,6 +42,39 @@ public final class StackSizeConfig {
         int result = (int) Math.round(scaled);
         result = Math.max(1, result);
         return Math.min(result, MAX_STACK_HARD_CAP.get());
+    }
+
+    /**
+     * Capacity used in {@link net.minecraft.world.level.block.entity.HopperBlockEntity} merge math
+     * ({@code getMaxStackSize() - destCount}). Vanilla uses only {@link ItemStack#getMaxStackSize()} on the
+     * moving stack; {@link Container#getMaxStackSize(ItemStack)} must match {@code setItem}/{@code limitSize}
+     * or stacks stall at the 99 inventory ceiling.
+     */
+    public static int hopperMergeStackCapacity(Container destination, ItemStack movingStack) {
+        if (!stackOverridesEnabled()) {
+            return movingStack.getMaxStackSize();
+        }
+        int movingMax = movingStack.getMaxStackSize();
+        int blended = destination.getMaxStackSize(movingStack);
+        if (blended >= movingMax) {
+            return movingMax;
+        }
+        if (destination.getMaxStackSize() == Item.ABSOLUTE_MAX_STACK_SIZE) {
+            return Math.min(MAX_STACK_HARD_CAP.get(), movingMax);
+        }
+        return blended;
+    }
+
+    /** Scales vanilla hopper cooldown ticks (1–8) after transfers; values {@code > 8} are left unchanged. */
+    public static int scaleHopperCooldownTicks(int vanillaTicks) {
+        double mult = HOPPER_TRANSFER_SPEED_MULTIPLIER.get();
+        if (!Double.isFinite(mult) || Math.abs(mult - 1.0D) < 1e-6) {
+            return vanillaTicks;
+        }
+        if (vanillaTicks <= 0 || vanillaTicks > 8) {
+            return vanillaTicks;
+        }
+        return Math.max(1, Mth.ceil(vanillaTicks / mult));
     }
 
     public static final class Value<T> {
