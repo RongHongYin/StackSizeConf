@@ -11,6 +11,9 @@
     "ExtraCodecsMixin",
     "SlotMixin",
     "ServerboundSetCreativeModeSlotPacketMixin",
+    "MerchantMenuMixin",
+    "MerchantMenuAccess",
+    "MerchantResultSlotMixin",
     "compat.lithium.HopperHelperMixin"
   ],
   "client": [

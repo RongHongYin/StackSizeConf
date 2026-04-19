@@ -27,6 +27,11 @@ public final class StackSizeConfig {
      */
     public static final Value<Double> HOPPER_TRANSFER_SPEED_MULTIPLIER = Value.of(1.0D);
 
+    /** Villager trading helper: off / fast restock on GUI reopen / infinite at master tier. */
+    public static final Value<BetterTradingMode> BETTER_TRADING_MODE = Value.of(BetterTradingMode.OFF);
+    /** Only {@link BetterTradingMode#INFINITE}: max result items moved from the merchant result slot per take. */
+    public static final Value<Integer> INFINITE_TRADE_MAX_PER_TAKE = Value.of(64);
+
     private StackSizeConfig() {}
 
     public static boolean stackOverridesEnabled() {

@@ -54,6 +54,8 @@ public final class StackSizeConfigPersistence {
         o.addProperty("shulker_open_play_sound", StackSizeConfig.SHULKER_OPEN_PLAY_SOUND.get());
         o.addProperty("shulker_open_server_validation", StackSizeConfig.SHULKER_OPEN_SERVER_VALIDATION.get());
         o.addProperty("hopper_transfer_speed_multiplier", StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER.get());
+        o.addProperty("better_trading_mode", StackSizeConfig.BETTER_TRADING_MODE.get().name());
+        o.addProperty("infinite_trade_max_per_take", StackSizeConfig.INFINITE_TRADE_MAX_PER_TAKE.get());
         return o;
     }
 
@@ -71,6 +73,18 @@ public final class StackSizeConfigPersistence {
         getBool(o, "shulker_open_play_sound", StackSizeConfig.SHULKER_OPEN_PLAY_SOUND);
         getBool(o, "shulker_open_server_validation", StackSizeConfig.SHULKER_OPEN_SERVER_VALIDATION);
         getDouble(o, "hopper_transfer_speed_multiplier", StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER, 0.1D, 128D);
+        getTradingMode(o, "better_trading_mode", StackSizeConfig.BETTER_TRADING_MODE);
+        getInt(o, "infinite_trade_max_per_take", StackSizeConfig.INFINITE_TRADE_MAX_PER_TAKE, 1, 2_097_151);
+    }
+
+    private static void getTradingMode(JsonObject o, String key, StackSizeConfig.Value<BetterTradingMode> target) {
+        if (!o.has(key) || !o.get(key).isJsonPrimitive()) {
+            return;
+        }
+        try {
+            target.set(BetterTradingMode.valueOf(o.get(key).getAsString()));
+        } catch (IllegalArgumentException ignored) {
+        }
     }
 
     private static void getBool(JsonObject o, String key, StackSizeConfig.Value<Boolean> target) {

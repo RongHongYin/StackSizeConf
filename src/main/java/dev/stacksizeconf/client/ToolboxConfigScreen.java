@@ -8,6 +8,7 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import dev.stacksizeconf.BetterTradingMode;
 import dev.stacksizeconf.StackSizeConfig;
 import dev.stacksizeconf.StackSizeConfigPersistence;
 
@@ -52,6 +53,20 @@ public final class ToolboxConfigScreen {
                 .setMin(0.1D)
                 .setMax(128D)
                 .setSaveConsumer(StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER::set)
+                .build());
+
+        ConfigCategory trading = builder.getOrCreateCategory(Component.translatable("stacksizeconf.config.category.trading"));
+        trading.addEntry(eb.startTextDescription(Component.translatable("stacksizeconf.config.hint.trading")).build());
+        trading.addEntry(eb.startEnumSelector(Component.translatable("stacksizeconf.config.better_trading_mode"), BetterTradingMode.class, StackSizeConfig.BETTER_TRADING_MODE.get())
+                .setDefaultValue(BetterTradingMode.OFF)
+                .setEnumNameProvider(mode -> Component.translatable("stacksizeconf.better_trading_mode." + mode.name()))
+                .setSaveConsumer(StackSizeConfig.BETTER_TRADING_MODE::set)
+                .build());
+        trading.addEntry(eb.startIntField(Component.translatable("stacksizeconf.config.infinite_trade_max_per_take"), StackSizeConfig.INFINITE_TRADE_MAX_PER_TAKE.get())
+                .setDefaultValue(64)
+                .setMin(1)
+                .setMax(1_000_000)
+                .setSaveConsumer(StackSizeConfig.INFINITE_TRADE_MAX_PER_TAKE::set)
                 .build());
 
         ConfigCategory magnet = builder.getOrCreateCategory(Component.translatable("stacksizeconf.config.category.magnet"));
