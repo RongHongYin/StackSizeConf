@@ -2,6 +2,7 @@
   "required": true,
   "package": "dev.stacksizeconf.mixin",
   "compatibilityLevel": "JAVA_21",
+  "plugin": "dev.stacksizeconf.mixin.StackSizeMixinPlugin",
   "mixins": [
     "ContainerMixin",
     "HopperBlockEntityMixin",
@@ -9,7 +10,8 @@
     "ItemEntityMixin",
     "ExtraCodecsMixin",
     "SlotMixin",
-    "ServerboundSetCreativeModeSlotPacketMixin"
+    "ServerboundSetCreativeModeSlotPacketMixin",
+    "compat.lithium.HopperHelperMixin"
   ],
   "client": [
     "GuiGraphicsMixin"

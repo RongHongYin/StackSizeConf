@@ -21,7 +21,7 @@ public final class StackSizeMod implements ModInitializer {
         UseItemCallback.EVENT.register(HandheldShulkerHandler::onUseItem);
         ServerTickEvents.END_WORLD_TICK.register(StackSizeMod::onEndWorldTick);
         ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> HandheldShulkerHandler.clearOpeningState(oldPlayer));
-        LOGGER.info("Initialized {} (Fabric).", MOD_ID);
+        LOGGER.info("Initialized Tools ({}) (Fabric).", MOD_ID);
     }
 
     private static void onEndWorldTick(ServerLevel level) {

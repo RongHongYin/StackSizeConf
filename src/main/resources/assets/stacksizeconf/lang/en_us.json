@@ -1,7 +1,7 @@
 {
-  "key.categories.stacksizeconf": "Toolbox",
-  "key.stacksizeconf.open_config": "Open toolbox settings",
-  "stacksizeconf.config.title": "Toolbox — Settings",
+  "key.categories.stacksizeconf": "Tools",
+  "key.stacksizeconf.open_config": "Open Tools settings",
+  "stacksizeconf.config.title": "Tools — Settings",
   "stacksizeconf.config.hint.server_authoritative": "Stacking, magnet, hopper speed, and shulker options apply on the server (or singleplayer). On multiplayer, match the server config file.",
   "stacksizeconf.config.category.stack": "Stack size",
   "stacksizeconf.config.category.magnet": "Item magnet",

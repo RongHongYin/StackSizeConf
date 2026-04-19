@@ -1,7 +1,7 @@
 {
-  "key.categories.stacksizeconf": "实用工具箱",
-  "key.stacksizeconf.open_config": "打开工具箱设置",
-  "stacksizeconf.config.title": "实用工具箱 — 设置",
+  "key.categories.stacksizeconf": "Tools",
+  "key.stacksizeconf.open_config": "打开 Tools 设置",
+  "stacksizeconf.config.title": "Tools — 设置",
   "stacksizeconf.config.hint.server_authoritative": "堆叠、吸附、漏斗速度、潜影盒等由服务端（或单人存档）配置决定；联机时请与服务器配置保持一致。",
   "stacksizeconf.config.category.stack": "自定义堆叠",
   "stacksizeconf.config.category.magnet": "物品吸附",

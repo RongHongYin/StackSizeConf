@@ -3,7 +3,7 @@
   "id": "${mod_id}",
   "version": "${version}",
   "name": "${mod_name}",
-  "description": "Multiple toolbox utilities: custom stack size, auto pickup, handheld shulker.",
+  "description": "Tools: custom stacks, hopper speed, item pickup magnet, handheld shulker.",
   "authors": [
     "RongHongYin"
   ],
