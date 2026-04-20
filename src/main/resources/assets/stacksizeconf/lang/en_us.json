@@ -4,6 +4,7 @@
   "stacksizeconf.module.handheld_shulker": "Handheld shulker box",
   "stacksizeconf.module.custom_stack": "Custom stack limit",
   "stacksizeconf.module.tools": "Light level display",
+  "stacksizeconf.module.xp_absorption": "Experience absorption",
   "stacksizeconf.reset_module": "Reset section",
   "stacksizeconf.reset_module.tooltip": "Restore every option in this section to defaults",
   "stacksizeconf.reset_all.tooltip": "Reset all mod settings to defaults (including key binding)",
@@ -44,5 +45,9 @@
   "stacksizeconf.config.desc.enableLightLevelOverlay": "When off, the light overlay hotkey does nothing and nothing is drawn (client only).\nBlock vs combined brightness is controlled by \"Overlay value mode\" below.",
   "stacksizeconf.config.desc.lightOverlayBrightnessMode": "BLOCK: torch/glowstone etc. only — 0 at night outdoors with no sources (good for where to place lights).\nCOMBINED: matches vanilla getMaxLocalRawBrightness (includes sky after day/night darken; often ~4 on the surface at night with no torches).",
   "stacksizeconf.config.desc.lightLevelOverlayHorizontalRange": "Horizontal extent in blocks from the player (square, Chebyshev radius). Larger values show more blocks.\nDefault: 16\nRange: 4 ~ 48",
-  "stacksizeconf.config.desc.lightLevelOverlayVerticalRange": "How many blocks above/below the feet block Y to scan for floor surfaces to label.\nDefault: 3\nRange: 0 ~ 16"
+  "stacksizeconf.config.desc.lightLevelOverlayVerticalRange": "How many blocks above/below the feet block Y to scan for floor surfaces to label.\nDefault: 3\nRange: 0 ~ 16",
+  "stacksizeconf.config.enable_direct_xp_absorption": "Direct XP absorption (no orb when player nearby)",
+  "stacksizeconf.config.direct_xp_absorption_range": "Direct XP absorption search radius (blocks)",
+  "stacksizeconf.config.desc.enableDirectXpAbsorption": "When enabled, experience that would spawn as orbs is given to the nearest non-spectator player within the radius below (Mending runs first, same as picking up an orb). If nobody is in range, vanilla orbs still spawn.\nDefault: on",
+  "stacksizeconf.config.desc.directXpAbsorptionRange": "Spherical distance from the orb spawn position to search for the nearest player.\nDefault: 8.0\nRange: 0.5 ~ 64.0"
 }

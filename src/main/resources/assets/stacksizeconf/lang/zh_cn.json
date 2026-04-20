@@ -4,6 +4,7 @@
   "stacksizeconf.module.handheld_shulker": "手持潜影盒",
   "stacksizeconf.module.custom_stack": "自定义堆叠上限",
   "stacksizeconf.module.tools": "光照强度显示",
+  "stacksizeconf.module.xp_absorption": "经验吸收",
   "stacksizeconf.reset_module": "重置模块",
   "stacksizeconf.reset_module.tooltip": "将此模块内所有选项恢复为默认值",
   "stacksizeconf.reset_all.tooltip": "将本模组全部设置恢复为默认值（包含快捷键）",
@@ -44,5 +45,9 @@
   "stacksizeconf.config.desc.enableLightLevelOverlay": "关闭时，光照覆盖层快捷键无效，且不会绘制覆盖层（仅客户端表现）。\n具体显示方块光还是综合亮度由下方「覆盖层数值模式」决定。",
   "stacksizeconf.config.desc.lightOverlayBrightnessMode": "方块光：仅火把、萤石等人造光，夜间露天无光源一般为 0，便于判断要不要插火把。\n综合亮度：与原版 getMaxLocalRawBrightness 一致，含天空经昼夜衰减后的贡献，夜间地表无火把时常见约 4。",
   "stacksizeconf.config.desc.lightLevelOverlayHorizontalRange": "以玩家为中心，在水平方向扫描的方块范围（正方形，切比雪夫半径）。数值越大，周围显示的格子越多。\n默认：16\n范围：4 ~ 48",
-  "stacksizeconf.config.desc.lightLevelOverlayVerticalRange": "相对脚下方块高度，向上/向下各扫描多少层以寻找可作为「地面」的顶面并显示光照。\n默认：3\n范围：0 ~ 16"
+  "stacksizeconf.config.desc.lightLevelOverlayVerticalRange": "相对脚下方块高度，向上/向下各扫描多少层以寻找可作为「地面」的顶面并显示光照。\n默认：3\n范围：0 ~ 16",
+  "stacksizeconf.config.enable_direct_xp_absorption": "附近玩家时直接吸收经验（不生成经验球）",
+  "stacksizeconf.config.direct_xp_absorption_range": "直接吸收经验的搜索半径（格）",
+  "stacksizeconf.config.desc.enableDirectXpAbsorption": "开启后，本应在某处生成的经验球若在下方半径内存在最近的非旁观玩家，则改为直接发放经验；修补（Mending）顺序与拾取经验球一致。若范围内无人，仍按原版生成经验球。\n默认：开启",
+  "stacksizeconf.config.desc.directXpAbsorptionRange": "以经验生成位置为中心，向周围搜索最近玩家的欧几里得距离上限（球半径）。\n默认：8.0\n范围：0.5 ~ 64.0"
 }

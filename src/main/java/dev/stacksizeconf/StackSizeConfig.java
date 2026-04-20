@@ -94,6 +94,19 @@ public final class StackSizeConfig {
             .translation("stacksizeconf.config.light_overlay_vertical_range")
             .defineInRange("lightLevelOverlayVerticalRange", 3, 0, 16);
 
+    public static final ModConfigSpec.BooleanValue ENABLE_DIRECT_XP_ABSORPTION = BUILDER
+            .comment(
+                    "启用后，在生成点周围有玩家时，经验以“直接给予”方式发放，不生成经验球实体；",
+                    "修补（Mending）逻辑与拾取经验球一致；范围内无玩家时仍生成经验球。"
+            )
+            .translation("stacksizeconf.config.enable_direct_xp_absorption")
+            .define("enableDirectXpAbsorption", true);
+
+    public static final ModConfigSpec.DoubleValue DIRECT_XP_ABSORPTION_RANGE = BUILDER
+            .comment("直接吸收经验：以经验生成位置为中心，搜索最近玩家的球半径（格）。")
+            .translation("stacksizeconf.config.direct_xp_absorption_range")
+            .defineInRange("directXpAbsorptionRange", 8.0, 0.5, 64.0);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 
     private StackSizeConfig() {

@@ -81,6 +81,12 @@ public final class ToolboxConfigurationSectionScreen extends ConfigurationScreen
             "lightLevelOverlayVerticalRange"
     );
 
+    /** Keys belonging to the "经验吸收" module (order = display order). */
+    private static final List<String> XP_ABSORPTION_KEYS = List.of(
+            "enableDirectXpAbsorption",
+            "directXpAbsorptionRange"
+    );
+
     private @Nullable KeyMapping keyCaptureTarget;
     private @Nullable LightOverlayHotkeyRowWidget overlayHotkeyRow;
     private boolean installedCustomGlobalReset;
@@ -143,6 +149,15 @@ public final class ToolboxConfigurationSectionScreen extends ConfigurationScreen
                 hasUndoableElements |= appendConfigRow(key);
             }
             hasUndoableElements |= appendElementRow(createLightOverlayHotkeyElement());
+        }
+
+        // --- 经验吸收 module ---
+        if (findEntryByKey(context, XP_ABSORPTION_KEYS.getFirst()) != null) {
+            addModuleHeaderRow(Component.translatable("stacksizeconf.module.xp_absorption"), XP_ABSORPTION_KEYS);
+            for (String key : XP_ABSORPTION_KEYS) {
+                inModules.add(key);
+                hasUndoableElements |= appendConfigRow(key);
+            }
         }
 
         // Keys not in any module (future expansion)
