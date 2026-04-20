@@ -3,6 +3,7 @@ package dev.stacksizeconf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.villager.VillagerData;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.MerchantContainer;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.ItemStack;
@@ -31,7 +32,7 @@ public final class BetterTrading {
         }
     }
 
-    public static void afterMerchantResultTake(Merchant merchant, MerchantContainer tradeContainer) {
+    public static void afterMerchantResultTake(Merchant merchant, MerchantMenu menu, MerchantContainer tradeContainer) {
         if (StackSizeConfig.BETTER_TRADING_MODE.get() != BetterTradingMode.INFINITE) {
             return;
         }
@@ -45,8 +46,20 @@ public final class BetterTrading {
             return;
         }
         MerchantOffer offer = tradeContainer.getActiveOffer();
-        if (offer != null) {
-            offer.resetUses();
+        if (offer == null) {
+            return;
+        }
+        offer.resetUses();
+        tradeContainer.updateSellItem();
+        if (merchant.getTradingPlayer() instanceof ServerPlayer serverPlayer && serverPlayer.containerMenu == menu) {
+            serverPlayer.sendMerchantOffers(
+                    menu.containerId,
+                    menu.getOffers(),
+                    menu.getTraderLevel(),
+                    menu.getTraderXp(),
+                    menu.showProgressBar(),
+                    menu.canRestock()
+            );
         }
     }
 

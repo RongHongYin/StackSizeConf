@@ -47,6 +47,8 @@ public final class StackSizeConfigPersistence {
         o.addProperty("max_stack_hard_cap", StackSizeConfig.MAX_STACK_HARD_CAP.get());
         o.addProperty("enable_item_magnet", StackSizeConfig.ENABLE_ITEM_MAGNET.get());
         o.addProperty("item_magnet_range", StackSizeConfig.ITEM_MAGNET_RANGE.get());
+        o.addProperty("enable_direct_xp_absorption", StackSizeConfig.ENABLE_DIRECT_XP_ABSORPTION.get());
+        o.addProperty("direct_xp_absorption_range", StackSizeConfig.DIRECT_XP_ABSORPTION_RANGE.get());
         o.addProperty("enable_handheld_shulker_open", StackSizeConfig.ENABLE_HANDHELD_SHULKER_OPEN.get());
         o.addProperty("shulker_open_require_sneak", StackSizeConfig.SHULKER_OPEN_REQUIRE_SNEAK.get());
         o.addProperty("shulker_open_allow_offhand", StackSizeConfig.SHULKER_OPEN_ALLOW_OFFHAND.get());
@@ -66,6 +68,8 @@ public final class StackSizeConfigPersistence {
         getInt(o, "non_stackable_base_max", StackSizeConfig.NON_STACKABLE_BASE_MAX, 1, Math.max(1, StackSizeConfig.MAX_STACK_HARD_CAP.get()));
         getBool(o, "enable_item_magnet", StackSizeConfig.ENABLE_ITEM_MAGNET);
         getDouble(o, "item_magnet_range", StackSizeConfig.ITEM_MAGNET_RANGE, 0.1D, 128D);
+        getBool(o, "enable_direct_xp_absorption", StackSizeConfig.ENABLE_DIRECT_XP_ABSORPTION);
+        getDouble(o, "direct_xp_absorption_range", StackSizeConfig.DIRECT_XP_ABSORPTION_RANGE, 0.5D, 128D);
         getBool(o, "enable_handheld_shulker_open", StackSizeConfig.ENABLE_HANDHELD_SHULKER_OPEN);
         getBool(o, "shulker_open_require_sneak", StackSizeConfig.SHULKER_OPEN_REQUIRE_SNEAK);
         getBool(o, "shulker_open_allow_offhand", StackSizeConfig.SHULKER_OPEN_ALLOW_OFFHAND);

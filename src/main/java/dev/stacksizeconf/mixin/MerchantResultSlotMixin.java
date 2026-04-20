@@ -28,6 +28,6 @@ public abstract class MerchantResultSlotMixin {
         if (!(player.containerMenu instanceof MerchantMenu menu)) {
             return;
         }
-        BetterTrading.afterMerchantResultTake(this.merchant, ((MerchantMenuAccess) menu).stacksizeconf$getTradeContainer());
+        BetterTrading.afterMerchantResultTake(this.merchant, menu, ((MerchantMenuAccess) menu).stacksizeconf$getTradeContainer());
     }
 }

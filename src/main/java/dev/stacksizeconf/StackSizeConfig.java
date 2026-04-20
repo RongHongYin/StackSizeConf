@@ -14,6 +14,9 @@ public final class StackSizeConfig {
     public static final Value<Boolean> ENABLE_ITEM_MAGNET = Value.of(true);
     public static final Value<Double> ITEM_MAGNET_RANGE = Value.of(6.0D);
 
+    public static final Value<Boolean> ENABLE_DIRECT_XP_ABSORPTION = Value.of(true);
+    public static final Value<Double> DIRECT_XP_ABSORPTION_RANGE = Value.of(8.0D);
+
     public static final Value<Boolean> ENABLE_HANDHELD_SHULKER_OPEN = Value.of(true);
     public static final Value<Boolean> SHULKER_OPEN_REQUIRE_SNEAK = Value.of(false);
     public static final Value<Boolean> SHULKER_OPEN_ALLOW_OFFHAND = Value.of(true);

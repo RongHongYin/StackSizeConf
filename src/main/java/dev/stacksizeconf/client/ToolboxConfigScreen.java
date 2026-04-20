@@ -81,6 +81,18 @@ public final class ToolboxConfigScreen {
                 .setSaveConsumer(StackSizeConfig.ITEM_MAGNET_RANGE::set)
                 .build());
 
+        ConfigCategory xpAbsorption = builder.getOrCreateCategory(Component.translatable("stacksizeconf.config.category.xp_absorption"));
+        xpAbsorption.addEntry(eb.startBooleanToggle(Component.translatable("stacksizeconf.config.enable_direct_xp_absorption"), StackSizeConfig.ENABLE_DIRECT_XP_ABSORPTION.get())
+                .setDefaultValue(true)
+                .setSaveConsumer(StackSizeConfig.ENABLE_DIRECT_XP_ABSORPTION::set)
+                .build());
+        xpAbsorption.addEntry(eb.startDoubleField(Component.translatable("stacksizeconf.config.direct_xp_absorption_range"), StackSizeConfig.DIRECT_XP_ABSORPTION_RANGE.get())
+                .setDefaultValue(8.0D)
+                .setMin(0.5D)
+                .setMax(64D)
+                .setSaveConsumer(StackSizeConfig.DIRECT_XP_ABSORPTION_RANGE::set)
+                .build());
+
         ConfigCategory shulker = builder.getOrCreateCategory(Component.translatable("stacksizeconf.config.category.shulker"));
         shulker.addEntry(eb.startBooleanToggle(Component.translatable("stacksizeconf.config.enable_handheld_shulker_open"), StackSizeConfig.ENABLE_HANDHELD_SHULKER_OPEN.get())
                 .setDefaultValue(true)

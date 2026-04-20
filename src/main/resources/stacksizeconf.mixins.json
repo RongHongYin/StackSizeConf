@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "dev.stacksizeconf.mixin.StackSizeMixinPlugin",
   "mixins": [
+    "AbstractContainerMenuAccess",
     "ContainerMixin",
     "HopperBlockEntityMixin",
     "ItemStackMixin",
@@ -14,6 +15,8 @@
     "MerchantMenuMixin",
     "MerchantMenuAccess",
     "MerchantResultSlotMixin",
+    "ExperienceOrbCountAccess",
+    "ServerLevelMixin",
     "compat.lithium.HopperHelperMixin"
   ],
   "client": [
