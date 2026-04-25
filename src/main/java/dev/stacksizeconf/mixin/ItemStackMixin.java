@@ -173,7 +173,7 @@ public abstract class ItemStackMixin {
             return;
         }
         ItemStack self = (ItemStack) (Object) this;
-        if (self.isEmpty() || stacksizeconf$SKIP_MAX_MIXIN.get() > 0) {
+        if (self.isEmpty() || stacksizeconf$SKIP_MAX_MIXIN.get() > 0 || StackSizeConfig.shouldBypassItemStackOverride()) {
             return;
         }
         cir.setReturnValue(StackSizeConfig.applyToVanillaMax(cir.getReturnValue()));

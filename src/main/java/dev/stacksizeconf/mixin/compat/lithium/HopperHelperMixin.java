@@ -5,6 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import dev.stacksizeconf.StackSizeConfig;
 import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
 import net.minecraft.world.WorldlyContainer;
@@ -38,10 +39,9 @@ public abstract class HopperHelperMixin {
             int targetSlot,
             @Nullable Direction fromDirection
     ) {
-        /*
-         * Instance INVOKE passes the invocation receiver first, then every parameter of the surrounding method — two
-         * Container slots refer to the same hopper destination inventory.
-         */
-        return invokeOwner.getMaxStackSize(invokeOwner.getItem(targetSlot));
+        if (!StackSizeConfig.stackOverridesEnabled()) {
+            return invokeOwner.getMaxStackSize();
+        }
+        return invokeOwner.getMaxStackSize(transferStack);
     }
 }

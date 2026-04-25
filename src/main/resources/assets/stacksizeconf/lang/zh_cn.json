@@ -15,6 +15,7 @@
   "stacksizeconf.better_trading_mode.QUICK_RESTOCK": "快速补货（重开界面补货）",
   "stacksizeconf.better_trading_mode.INFINITE": "无限交易（满级村民）",
   "stacksizeconf.config.hint.hopper_speed": "大于 1 时加快（每次吸入/吐出的间隔变短）；小于 1 时变慢。1.0 为原版。数值过大可能加重服务器负担。",
+  "stacksizeconf.config.enable_hopper_stack_overrides": "允许堆叠覆盖作用于漏斗",
   "stacksizeconf.config.hopper_transfer_speed_multiplier": "传输速度倍率",
   "stacksizeconf.config.category.shulker": "手持潜影盒",
   "stacksizeconf.config.enable_stack_overrides": "启用堆叠覆盖",

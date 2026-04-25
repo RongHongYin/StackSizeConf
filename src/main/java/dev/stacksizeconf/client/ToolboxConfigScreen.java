@@ -27,6 +27,10 @@ public final class ToolboxConfigScreen {
                 .setDefaultValue(true)
                 .setSaveConsumer(StackSizeConfig.ENABLE_STACK_OVERRIDES::set)
                 .build());
+        stack.addEntry(eb.startBooleanToggle(Component.translatable("stacksizeconf.config.enable_hopper_stack_overrides"), StackSizeConfig.ENABLE_HOPPER_STACK_OVERRIDES.get())
+                .setDefaultValue(true)
+                .setSaveConsumer(StackSizeConfig.ENABLE_HOPPER_STACK_OVERRIDES::set)
+                .build());
         stack.addEntry(eb.startDoubleField(Component.translatable("stacksizeconf.config.stack_size_multiplier"), StackSizeConfig.STACK_SIZE_MULTIPLIER.get())
                 .setDefaultValue(2.0D)
                 .setMin(0.01D)
@@ -51,7 +55,7 @@ public final class ToolboxConfigScreen {
         hopper.addEntry(eb.startDoubleField(Component.translatable("stacksizeconf.config.hopper_transfer_speed_multiplier"), StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER.get())
                 .setDefaultValue(1.0D)
                 .setMin(0.1D)
-                .setMax(128D)
+                .setMax(99D)
                 .setSaveConsumer(StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER::set)
                 .build());
 

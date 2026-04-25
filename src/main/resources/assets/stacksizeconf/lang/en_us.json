@@ -15,6 +15,7 @@
   "stacksizeconf.better_trading_mode.QUICK_RESTOCK": "Quick restock (reopen GUI)",
   "stacksizeconf.better_trading_mode.INFINITE": "Infinite (master villager)",
   "stacksizeconf.config.hint.hopper_speed": "Above 1 speeds up (shorter cooldown after each suck/eject); below 1 slows down. 1.0 is vanilla. Very high values can increase server load.",
+  "stacksizeconf.config.enable_hopper_stack_overrides": "Allow stack overrides in hoppers",
   "stacksizeconf.config.hopper_transfer_speed_multiplier": "Transfer speed multiplier",
   "stacksizeconf.config.category.shulker": "Handheld shulker",
   "stacksizeconf.config.enable_stack_overrides": "Enable stack overrides",

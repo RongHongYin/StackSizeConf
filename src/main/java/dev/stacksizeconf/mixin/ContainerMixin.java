@@ -19,10 +19,10 @@ import net.minecraft.world.item.ItemStack;
 public interface ContainerMixin {
     @Inject(method = "getMaxStackSize(Lnet/minecraft/world/item/ItemStack;)I", at = @At("RETURN"), cancellable = true)
     default void stacksizeconf$raiseContainerStackLimit(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
-        if (!StackSizeConfig.stackOverridesEnabled()) {
+        Container self = (Container) this;
+        if (!StackSizeConfig.shouldApplyContainerStackOverride(self)) {
             return;
         }
-        Container self = (Container) this;
         if (self.getMaxStackSize() != Item.ABSOLUTE_MAX_STACK_SIZE) {
             return;
         }

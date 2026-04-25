@@ -4,6 +4,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.Hopper;
 
 public final class StackSizeConfig {
     public static final Value<Boolean> ENABLE_STACK_OVERRIDES = Value.of(true);
@@ -29,6 +30,8 @@ public final class StackSizeConfig {
      * items in and out more often. {@code 1.0} matches vanilla.
      */
     public static final Value<Double> HOPPER_TRANSFER_SPEED_MULTIPLIER = Value.of(1.0D);
+    /** Whether custom stack sizes also apply inside hopper inventories and hopper transfer math. */
+    public static final Value<Boolean> ENABLE_HOPPER_STACK_OVERRIDES = Value.of(true);
 
     /** Villager trading helper: off / fast restock on GUI reopen / infinite at master tier. */
     public static final Value<BetterTradingMode> BETTER_TRADING_MODE = Value.of(BetterTradingMode.OFF);
@@ -39,6 +42,20 @@ public final class StackSizeConfig {
 
     public static boolean stackOverridesEnabled() {
         return ENABLE_STACK_OVERRIDES.get();
+    }
+
+    public static boolean hopperStackOverridesEnabled() {
+        return stackOverridesEnabled() && ENABLE_HOPPER_STACK_OVERRIDES.get();
+    }
+
+    public static boolean shouldApplyContainerStackOverride(Container container) {
+        if (!stackOverridesEnabled()) {
+            return false;
+        }
+        if (!ENABLE_HOPPER_STACK_OVERRIDES.get() && isHopperContainer(container)) {
+            return false;
+        }
+        return true;
     }
 
     public static int applyToVanillaMax(int vanillaMax) {
@@ -83,6 +100,26 @@ public final class StackSizeConfig {
             return vanillaTicks;
         }
         return Math.max(1, Mth.ceil(vanillaTicks / mult));
+    }
+
+    private static final ThreadLocal<Integer> VANILLA_ITEM_MAX_DEPTH = ThreadLocal.withInitial(() -> 0);
+
+    public static int vanillaItemMaxStackSize(ItemStack stack) {
+        int depth = VANILLA_ITEM_MAX_DEPTH.get();
+        VANILLA_ITEM_MAX_DEPTH.set(depth + 1);
+        try {
+            return stack.getMaxStackSize();
+        } finally {
+            VANILLA_ITEM_MAX_DEPTH.set(depth);
+        }
+    }
+
+    public static boolean shouldBypassItemStackOverride() {
+        return VANILLA_ITEM_MAX_DEPTH.get() > 0;
+    }
+
+    private static boolean isHopperContainer(Container container) {
+        return container instanceof Hopper;
     }
 
     public static final class Value<T> {

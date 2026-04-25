@@ -55,6 +55,7 @@ public final class StackSizeConfigPersistence {
         o.addProperty("shulker_open_allow_riding_or_flying", StackSizeConfig.SHULKER_OPEN_ALLOW_RIDING_OR_FLYING.get());
         o.addProperty("shulker_open_play_sound", StackSizeConfig.SHULKER_OPEN_PLAY_SOUND.get());
         o.addProperty("shulker_open_server_validation", StackSizeConfig.SHULKER_OPEN_SERVER_VALIDATION.get());
+        o.addProperty("enable_hopper_stack_overrides", StackSizeConfig.ENABLE_HOPPER_STACK_OVERRIDES.get());
         o.addProperty("hopper_transfer_speed_multiplier", StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER.get());
         o.addProperty("better_trading_mode", StackSizeConfig.BETTER_TRADING_MODE.get().name());
         o.addProperty("infinite_trade_max_per_take", StackSizeConfig.INFINITE_TRADE_MAX_PER_TAKE.get());
@@ -76,7 +77,8 @@ public final class StackSizeConfigPersistence {
         getBool(o, "shulker_open_allow_riding_or_flying", StackSizeConfig.SHULKER_OPEN_ALLOW_RIDING_OR_FLYING);
         getBool(o, "shulker_open_play_sound", StackSizeConfig.SHULKER_OPEN_PLAY_SOUND);
         getBool(o, "shulker_open_server_validation", StackSizeConfig.SHULKER_OPEN_SERVER_VALIDATION);
-        getDouble(o, "hopper_transfer_speed_multiplier", StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER, 0.1D, 128D);
+        getBool(o, "enable_hopper_stack_overrides", StackSizeConfig.ENABLE_HOPPER_STACK_OVERRIDES);
+        getDouble(o, "hopper_transfer_speed_multiplier", StackSizeConfig.HOPPER_TRANSFER_SPEED_MULTIPLIER, 0.1D, 99D);
         getTradingMode(o, "better_trading_mode", StackSizeConfig.BETTER_TRADING_MODE);
         getInt(o, "infinite_trade_max_per_take", StackSizeConfig.INFINITE_TRADE_MAX_PER_TAKE, 1, 2_097_151);
     }
