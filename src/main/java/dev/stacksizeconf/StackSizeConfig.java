@@ -1,5 +1,7 @@
 package dev.stacksizeconf;
 
+import org.jspecify.annotations.Nullable;
+
 import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
@@ -76,8 +78,19 @@ public final class StackSizeConfig {
      * or stacks stall at the 99 inventory ceiling.
      */
     public static int hopperMergeStackCapacity(Container destination, ItemStack movingStack) {
-        if (!stackOverridesEnabled()) {
-            return movingStack.getMaxStackSize();
+        return hopperTransferStackCapacity(null, destination, movingStack);
+    }
+
+    /**
+     * Capacity used in hopper transfer/merge math. Hopper override toggle only limits paths where the
+     * destination is a hopper inventory; hopper output into chests/barrels should still honor global
+     * stack overrides on the destination container.
+     */
+    public static int hopperTransferStackCapacity(@Nullable Container source, Container destination, ItemStack movingStack) {
+        // Keep merge math aligned with hopper inventory caps.
+        // If hopper overrides are disabled, only transfers INTO hopper inventories should use vanilla cap.
+        if (isHopperContainer(destination) && !hopperStackOverridesEnabled()) {
+            return vanillaItemMaxStackSize(movingStack);
         }
         int movingMax = movingStack.getMaxStackSize();
         int blended = destination.getMaxStackSize(movingStack);

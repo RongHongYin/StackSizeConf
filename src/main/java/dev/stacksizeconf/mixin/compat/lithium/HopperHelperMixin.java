@@ -10,6 +10,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.Hopper;
 
 /**
  * Lithium replaces hopper insertion with {@code HopperHelper.tryMoveSingleItem}. That path compares
@@ -40,6 +41,9 @@ public abstract class HopperHelperMixin {
             @Nullable Direction fromDirection
     ) {
         if (!StackSizeConfig.stackOverridesEnabled()) {
+            return invokeOwner.getMaxStackSize();
+        }
+        if (invokeOwner instanceof Hopper && !StackSizeConfig.hopperStackOverridesEnabled()) {
             return invokeOwner.getMaxStackSize();
         }
         return invokeOwner.getMaxStackSize(transferStack);

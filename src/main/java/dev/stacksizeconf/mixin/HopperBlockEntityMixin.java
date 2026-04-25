@@ -5,10 +5,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import dev.stacksizeconf.StackSizeConfig;
 import net.minecraft.core.BlockPos;
@@ -25,6 +25,14 @@ public abstract class HopperBlockEntityMixin {
     private static double stacksizeconf$extraTickCarry;
     @Unique
     private static final ThreadLocal<Boolean> stacksizeconf$EXTRA_TICK_GUARD = ThreadLocal.withInitial(() -> false);
+    @Unique
+    private static final ThreadLocal<Boolean> stacksizeconf$TRY_MOVE_LIMIT_ACTIVE = ThreadLocal.withInitial(() -> false);
+    @Unique
+    private static final ThreadLocal<Integer> stacksizeconf$TRY_MOVE_LIMIT_MAX = ThreadLocal.withInitial(() -> 0);
+    @Unique
+    private static final ThreadLocal<Integer> stacksizeconf$TRY_MOVE_TAIL_COUNT = ThreadLocal.withInitial(() -> 0);
+    @Unique
+    private static final ThreadLocal<ItemStack> stacksizeconf$TRY_MOVE_TAIL_TEMPLATE = ThreadLocal.withInitial(() -> ItemStack.EMPTY);
 
     @ModifyVariable(method = "setCooldown", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private int stacksizeconf$scaleHopperCooldown(int cooldownTime) {
@@ -72,19 +80,96 @@ public abstract class HopperBlockEntityMixin {
         }
     }
 
-    @ModifyExpressionValue(
+    @Redirect(
             method = "tryMoveInItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;getMaxStackSize()I", ordinal = 0)
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;getMaxStackSize()I")
     )
     private static int stacksizeconf$hopperMergeCapacityByToggle(
-            int computed,
+            ItemStack receiver,
             @Nullable Container source,
             Container destination,
             ItemStack movingStack,
             int slot,
             @Nullable Direction direction
     ) {
-        // Hopper stack toggle only controls hopper inventory cap, not transfer/output capacity.
-        return StackSizeConfig.hopperMergeStackCapacity(destination, movingStack);
+        // Route all max-stack checks in hopper merge math through one policy function so disabled
+        // hopper overrides never inherit large global stack limits.
+        return StackSizeConfig.hopperTransferStackCapacity(source, destination, movingStack);
+    }
+
+    @Inject(
+            method = "tryMoveInItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;",
+            at = @At("HEAD")
+    )
+    private static void stacksizeconf$resetEntityPullTail(
+            @Nullable Container source,
+            Container destination,
+            ItemStack movingStack,
+            int slot,
+            @Nullable Direction direction,
+            CallbackInfoReturnable<ItemStack> cir
+    ) {
+        if (source != null || StackSizeConfig.hopperStackOverridesEnabled() || movingStack.isEmpty()) {
+            stacksizeconf$TRY_MOVE_LIMIT_ACTIVE.set(false);
+            stacksizeconf$TRY_MOVE_LIMIT_MAX.set(0);
+        } else {
+            stacksizeconf$TRY_MOVE_LIMIT_ACTIVE.set(true);
+            stacksizeconf$TRY_MOVE_LIMIT_MAX.set(StackSizeConfig.vanillaItemMaxStackSize(movingStack));
+        }
+        stacksizeconf$TRY_MOVE_TAIL_COUNT.set(0);
+        stacksizeconf$TRY_MOVE_TAIL_TEMPLATE.set(ItemStack.EMPTY);
+    }
+
+    @ModifyVariable(
+            method = "tryMoveInItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;",
+            at = @At("HEAD"),
+            ordinal = 0,
+            argsOnly = true
+    )
+    private static ItemStack stacksizeconf$limitEntityPullInputPerAttempt(ItemStack originalMovingStack) {
+        if (!Boolean.TRUE.equals(stacksizeconf$TRY_MOVE_LIMIT_ACTIVE.get()) || originalMovingStack.isEmpty()) {
+            return originalMovingStack;
+        }
+        int maxPerAttempt = stacksizeconf$TRY_MOVE_LIMIT_MAX.get();
+        if (originalMovingStack.getCount() <= maxPerAttempt) {
+            return originalMovingStack;
+        }
+        int tail = originalMovingStack.getCount() - maxPerAttempt;
+        stacksizeconf$TRY_MOVE_TAIL_COUNT.set(tail);
+        stacksizeconf$TRY_MOVE_TAIL_TEMPLATE.set(originalMovingStack.copyWithCount(1));
+        return originalMovingStack.copyWithCount(maxPerAttempt);
+    }
+
+    @Inject(
+            method = "tryMoveInItem(Lnet/minecraft/world/Container;Lnet/minecraft/world/Container;Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/core/Direction;)Lnet/minecraft/world/item/ItemStack;",
+            at = @At("RETURN"),
+            cancellable = true
+    )
+    private static void stacksizeconf$appendEntityPullTailBack(
+            @Nullable Container source,
+            Container destination,
+            ItemStack movingStack,
+            int slot,
+            @Nullable Direction direction,
+            CallbackInfoReturnable<ItemStack> cir
+    ) {
+        stacksizeconf$TRY_MOVE_LIMIT_ACTIVE.set(false);
+        stacksizeconf$TRY_MOVE_LIMIT_MAX.set(0);
+        int tail = stacksizeconf$TRY_MOVE_TAIL_COUNT.get();
+        ItemStack template = stacksizeconf$TRY_MOVE_TAIL_TEMPLATE.get();
+        stacksizeconf$TRY_MOVE_TAIL_COUNT.set(0);
+        stacksizeconf$TRY_MOVE_TAIL_TEMPLATE.set(ItemStack.EMPTY);
+        if (tail <= 0 || template.isEmpty()) {
+            return;
+        }
+        ItemStack remainder = cir.getReturnValue();
+        if (remainder.isEmpty()) {
+            cir.setReturnValue(template.copyWithCount(tail));
+            return;
+        }
+        if (ItemStack.isSameItemSameComponents(remainder, template)) {
+            remainder.grow(tail);
+            cir.setReturnValue(remainder);
+        }
     }
 }
