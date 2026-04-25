@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "stacksizeconf:block/aggregate_chest"
+    }
+  }
+}

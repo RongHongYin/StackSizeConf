@@ -31,5 +31,16 @@
   "stacksizeconf.config.shulker_open_allow_offhand": "Allow off-hand open",
   "stacksizeconf.config.shulker_open_allow_riding_or_flying": "Allow while riding/flying",
   "stacksizeconf.config.shulker_open_play_sound": "Play sound on open",
-  "stacksizeconf.config.shulker_open_server_validation": "Server-side open validation"
+  "stacksizeconf.config.shulker_open_server_validation": "Server-side open validation",
+  "block.stacksizeconf.aggregate_chest": "Aggregate Chest",
+  "container.stacksizeconf.aggregate_chest": "Aggregate Chest",
+  "gui.stacksizeconf.aggregate.extract.title": "Extract Amount",
+  "gui.stacksizeconf.aggregate.extract.input": "Amount",
+  "gui.stacksizeconf.aggregate.extract.confirm": "Confirm",
+  "gui.stacksizeconf.aggregate.extract.cancel": "Cancel",
+  "gui.stacksizeconf.aggregate.extract.max": "Max: %s",
+  "gui.stacksizeconf.aggregate.search": "Search Items",
+  "gui.stacksizeconf.aggregate.sort_asc": "Sort by count ascending",
+  "gui.stacksizeconf.aggregate.sort_desc": "Sort by count descending",
+  "container.stacksizeconf.aggregate_capacity": "Capacity: %s/%s"
 }

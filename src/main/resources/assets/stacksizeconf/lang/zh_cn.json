@@ -31,5 +31,16 @@
   "stacksizeconf.config.shulker_open_allow_offhand": "允许副手打开",
   "stacksizeconf.config.shulker_open_allow_riding_or_flying": "允许骑乘/飞行时打开",
   "stacksizeconf.config.shulker_open_play_sound": "打开时播放音效",
-  "stacksizeconf.config.shulker_open_server_validation": "服务端校验打开条件"
+  "stacksizeconf.config.shulker_open_server_validation": "服务端校验打开条件",
+  "block.stacksizeconf.aggregate_chest": "聚合箱子",
+  "container.stacksizeconf.aggregate_chest": "聚合箱子",
+  "gui.stacksizeconf.aggregate.extract.title": "提取数量",
+  "gui.stacksizeconf.aggregate.extract.input": "输入数量",
+  "gui.stacksizeconf.aggregate.extract.confirm": "确认",
+  "gui.stacksizeconf.aggregate.extract.cancel": "取消",
+  "gui.stacksizeconf.aggregate.extract.max": "最多：%s",
+  "gui.stacksizeconf.aggregate.search": "搜索物品",
+  "gui.stacksizeconf.aggregate.sort_asc": "按数量升序",
+  "gui.stacksizeconf.aggregate.sort_desc": "按数量降序",
+  "container.stacksizeconf.aggregate_capacity": "容量: %s/%s"
 }

@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import dev.stacksizeconf.aggregate.AggregateChestNetworking;
+import dev.stacksizeconf.aggregate.AggregateChestRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -18,6 +20,8 @@ public final class StackSizeMod implements ModInitializer {
     @Override
     public void onInitialize() {
         StackSizeConfigPersistence.load();
+        AggregateChestRegistry.init();
+        AggregateChestNetworking.initServer();
         UseItemCallback.EVENT.register(HandheldShulkerHandler::onUseItem);
         ServerTickEvents.END_WORLD_TICK.register(StackSizeMod::onEndWorldTick);
         ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> HandheldShulkerHandler.clearOpeningState(oldPlayer));

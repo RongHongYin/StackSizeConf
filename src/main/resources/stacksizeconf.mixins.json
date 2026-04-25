@@ -21,7 +21,8 @@
     "compat.lithium.HopperHelperMixin"
   ],
   "client": [
-    "GuiGraphicsMixin"
+    "GuiGraphicsMixin",
+    "client.AbstractContainerScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1
