@@ -42,5 +42,7 @@
   "gui.stacksizeconf.aggregate.search": "搜索物品",
   "gui.stacksizeconf.aggregate.sort_asc": "按数量升序",
   "gui.stacksizeconf.aggregate.sort_desc": "按数量降序",
+  "gui.stacksizeconf.aggregate.insert_matching": "补齐",
+  "gui.stacksizeconf.aggregate.insert_matching.tooltip": "将背包中与聚合箱子已有物品相符的物品存入",
   "container.stacksizeconf.aggregate_capacity": "容量: %s/%s"
 }

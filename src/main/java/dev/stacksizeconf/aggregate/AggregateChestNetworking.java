@@ -3,6 +3,8 @@ package dev.stacksizeconf.aggregate;
 import dev.stacksizeconf.StackSizeMod;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -11,6 +13,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 public final class AggregateChestNetworking {
     public static final Identifier REQUEST_EXTRACT_ID = Identifier.fromNamespaceAndPath(StackSizeMod.MOD_ID, "aggregate_chest_extract");
@@ -18,6 +21,7 @@ public final class AggregateChestNetworking {
     public static final Identifier REQUEST_SCROLL_SET_ID = Identifier.fromNamespaceAndPath(StackSizeMod.MOD_ID, "aggregate_chest_scroll_set");
     public static final Identifier REQUEST_FILTER_ID = Identifier.fromNamespaceAndPath(StackSizeMod.MOD_ID, "aggregate_chest_filter");
     public static final Identifier REQUEST_SORT_ID = Identifier.fromNamespaceAndPath(StackSizeMod.MOD_ID, "aggregate_chest_sort");
+    public static final Identifier REQUEST_INSERT_MATCHING_ID = Identifier.fromNamespaceAndPath(StackSizeMod.MOD_ID, "aggregate_chest_insert_matching");
     public static final CustomPacketPayload.Type<AggregateExtractPayload> REQUEST_EXTRACT_TYPE =
             new CustomPacketPayload.Type<>(REQUEST_EXTRACT_ID);
     public static final CustomPacketPayload.Type<AggregateScrollPayload> REQUEST_SCROLL_TYPE =
@@ -28,6 +32,8 @@ public final class AggregateChestNetworking {
             new CustomPacketPayload.Type<>(REQUEST_FILTER_ID);
     public static final CustomPacketPayload.Type<AggregateSortPayload> REQUEST_SORT_TYPE =
             new CustomPacketPayload.Type<>(REQUEST_SORT_ID);
+    public static final CustomPacketPayload.Type<AggregateInsertMatchingPayload> REQUEST_INSERT_MATCHING_TYPE =
+            new CustomPacketPayload.Type<>(REQUEST_INSERT_MATCHING_ID);
     public static final StreamCodec<RegistryFriendlyByteBuf, AggregateExtractPayload> REQUEST_EXTRACT_CODEC =
             StreamCodec.of(
                     (buf, payload) -> {
@@ -51,6 +57,10 @@ public final class AggregateChestNetworking {
             StreamCodec.of(
                     (buf, payload) -> buf.writeVarInt(payload.modeOrdinal()),
                     buf -> new AggregateSortPayload(buf.readVarInt()));
+    public static final StreamCodec<RegistryFriendlyByteBuf, AggregateInsertMatchingPayload> REQUEST_INSERT_MATCHING_CODEC =
+            StreamCodec.of(
+                    (buf, payload) -> buf.writeVarInt(payload.menuSlot()),
+                    buf -> new AggregateInsertMatchingPayload(buf.readVarInt()));
 
     private AggregateChestNetworking() {}
 
@@ -60,6 +70,7 @@ public final class AggregateChestNetworking {
         PayloadTypeRegistry.playC2S().register(REQUEST_SCROLL_SET_TYPE, REQUEST_SCROLL_SET_CODEC);
         PayloadTypeRegistry.playC2S().register(REQUEST_FILTER_TYPE, REQUEST_FILTER_CODEC);
         PayloadTypeRegistry.playC2S().register(REQUEST_SORT_TYPE, REQUEST_SORT_CODEC);
+        PayloadTypeRegistry.playC2S().register(REQUEST_INSERT_MATCHING_TYPE, REQUEST_INSERT_MATCHING_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(REQUEST_EXTRACT_TYPE, (payload, context) -> {
             context.server().execute(() -> handleExtractRequest(context.player(), payload.menuSlot(), payload.amount()));
         });
@@ -74,6 +85,9 @@ public final class AggregateChestNetworking {
         });
         ServerPlayNetworking.registerGlobalReceiver(REQUEST_SORT_TYPE, (payload, context) -> {
             context.server().execute(() -> handleSortRequest(context.player(), payload.modeOrdinal()));
+        });
+        ServerPlayNetworking.registerGlobalReceiver(REQUEST_INSERT_MATCHING_TYPE, (payload, context) -> {
+            context.server().execute(() -> handleInsertMatchingRequest(context.player(), payload.menuSlot()));
         });
     }
 
@@ -149,6 +163,106 @@ public final class AggregateChestNetworking {
         player.containerMenu.broadcastChanges();
     }
 
+    private static void handleInsertMatchingRequest(Player player, int menuSlot) {
+        if (player.containerMenu == null) {
+            return;
+        }
+        if (menuSlot < 0) {
+            handleInsertAllMatchingRequest(player);
+            return;
+        }
+        if (menuSlot >= player.containerMenu.slots.size()) {
+            return;
+        }
+        Slot targetSlot = player.containerMenu.getSlot(menuSlot);
+        if (!(targetSlot.container instanceof AggregateInventory aggregateInventory)) {
+            return;
+        }
+        ItemStack targetTemplate = normalizeAggregateDisplayTemplate(targetSlot.getItem());
+        if (targetTemplate.isEmpty()) {
+            return;
+        }
+        boolean changed = false;
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (stack.isEmpty() || !ItemStack.isSameItemSameComponents(stack, targetTemplate)) {
+                continue;
+            }
+            int originalCount = stack.getCount();
+            ItemStack remainder = aggregateInventory.owner().insertVirtual(stack.copy());
+            int moved = originalCount - remainder.getCount();
+            if (moved <= 0) {
+                continue;
+            }
+            stack.shrink(moved);
+            changed = true;
+        }
+        if (changed) {
+            player.containerMenu.broadcastChanges();
+        }
+    }
+
+    private static void handleInsertAllMatchingRequest(Player player) {
+        if (player.containerMenu.slots.isEmpty()) {
+            return;
+        }
+        Slot first = player.containerMenu.getSlot(0);
+        if (!(first.container instanceof AggregateInventory aggregateInventory)) {
+            return;
+        }
+        boolean changed = false;
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (stack.isEmpty() || !isRepresentedInAggregate(aggregateInventory, stack)) {
+                continue;
+            }
+            int originalCount = stack.getCount();
+            ItemStack remainder = aggregateInventory.owner().insertVirtual(stack.copy());
+            int moved = originalCount - remainder.getCount();
+            if (moved <= 0) {
+                continue;
+            }
+            stack.shrink(moved);
+            changed = true;
+        }
+        if (changed) {
+            player.containerMenu.broadcastChanges();
+        }
+    }
+
+    private static boolean isRepresentedInAggregate(AggregateInventory aggregateInventory, ItemStack candidate) {
+        int entries = aggregateInventory.owner().summaryEntryCount();
+        for (int i = 0; i < entries; i++) {
+            ItemStack template = normalizeAggregateDisplayTemplate(aggregateInventory.owner().getVirtualStack(i));
+            if (!template.isEmpty() && ItemStack.isSameItemSameComponents(candidate, template)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static ItemStack normalizeAggregateDisplayTemplate(ItemStack displayed) {
+        if (displayed.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack normalized = displayed.copyWithCount(1);
+        CustomData customData = normalized.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        if (customData.isEmpty()) {
+            return normalized;
+        }
+        CompoundTag tag = customData.copyTag();
+        if (!tag.contains(AggregateChestBlockEntity.AGGREGATE_TOTAL_TAG)) {
+            return normalized;
+        }
+        tag.remove(AggregateChestBlockEntity.AGGREGATE_TOTAL_TAG);
+        if (tag.isEmpty()) {
+            normalized.remove(DataComponents.CUSTOM_DATA);
+        } else {
+            normalized.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        }
+        return normalized;
+    }
+
     public record AggregateExtractPayload(int menuSlot, int amount) implements CustomPacketPayload {
         @Override
         public Type<? extends CustomPacketPayload> type() {
@@ -181,6 +295,13 @@ public final class AggregateChestNetworking {
         @Override
         public Type<? extends CustomPacketPayload> type() {
             return REQUEST_SORT_TYPE;
+        }
+    }
+
+    public record AggregateInsertMatchingPayload(int menuSlot) implements CustomPacketPayload {
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return REQUEST_INSERT_MATCHING_TYPE;
         }
     }
 }

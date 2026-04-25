@@ -42,5 +42,7 @@
   "gui.stacksizeconf.aggregate.search": "Search Items",
   "gui.stacksizeconf.aggregate.sort_asc": "Sort by count ascending",
   "gui.stacksizeconf.aggregate.sort_desc": "Sort by count descending",
+  "gui.stacksizeconf.aggregate.insert_matching": "Fill",
+  "gui.stacksizeconf.aggregate.insert_matching.tooltip": "Move matching items from your inventory into existing aggregate entries",
   "container.stacksizeconf.aggregate_capacity": "Capacity: %s/%s"
 }

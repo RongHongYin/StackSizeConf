@@ -39,12 +39,14 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     private static final int VISIBLE_SLOTS = 54;
     private static final int MAX_SCROLL_OFFSET = TOTAL_VIRTUAL_SLOTS - VISIBLE_SLOTS;
     private static final int SCROLL_STEP = 9;
+    private static final int MOUSE_BUTTON_MIDDLE = 2;
 
     private boolean stacksizeconf$draggingScrollbar;
     private int stacksizeconf$clientScrollOffset;
     private EditBox stacksizeconf$searchBox;
     private Button stacksizeconf$sortAscButton;
     private Button stacksizeconf$sortDescButton;
+    private Button stacksizeconf$insertMatchingButton;
     private AggregateInventory.SortMode stacksizeconf$clientSortMode = AggregateInventory.SortMode.NONE;
 
     @Shadow
@@ -94,6 +96,26 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
         cir.setReturnValue(true);
     }
 
+    @Inject(method = "mouseClicked(Lnet/minecraft/client/input/MouseButtonEvent;Z)Z", at = @At("HEAD"), cancellable = true)
+    private void stacksizeconf$insertMatchingFromPlayerInventory(MouseButtonEvent mouseButtonEvent, boolean dblClick, CallbackInfoReturnable<Boolean> cir) {
+        if (this.hoveredSlot == null || !stacksizeconf$isAggregateChestScreen()) {
+            return;
+        }
+        if (mouseButtonEvent.button() != MOUSE_BUTTON_MIDDLE) {
+            return;
+        }
+        int hoveredMenuSlot = this.menu.slots.indexOf(this.hoveredSlot);
+        if (hoveredMenuSlot < 0 || hoveredMenuSlot >= AGGREGATE_VIEW_SLOTS) {
+            return;
+        }
+        ItemStack displayed = this.hoveredSlot.getItem();
+        if (displayed.isEmpty()) {
+            return;
+        }
+        ClientPlayNetworking.send(new AggregateChestNetworking.AggregateInsertMatchingPayload(hoveredMenuSlot));
+        cir.setReturnValue(true);
+    }
+
     @Inject(
             method = "renderContents(Lnet/minecraft/client/gui/GuiGraphics;IIF)V",
             at = @At("TAIL")
@@ -138,6 +160,7 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
             this.stacksizeconf$searchBox = null;
             this.stacksizeconf$sortAscButton = null;
             this.stacksizeconf$sortDescButton = null;
+            this.stacksizeconf$insertMatchingButton = null;
             return;
         }
         this.stacksizeconf$searchBox = new EditBox(this.font, this.leftPos + 8, this.topPos - 12, 90, 12, Component.translatable("gui.stacksizeconf.aggregate.search"));
@@ -164,6 +187,13 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
                         .build());
         this.stacksizeconf$sortDescButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
                 Component.translatable("gui.stacksizeconf.aggregate.sort_desc")));
+        this.stacksizeconf$insertMatchingButton = this.addRenderableWidget(
+                Button.builder(Component.literal("→"), b ->
+                                ClientPlayNetworking.send(new AggregateChestNetworking.AggregateInsertMatchingPayload(-1)))
+                        .bounds(this.leftPos + 130, this.topPos - 13, 12, 12)
+                        .build());
+        this.stacksizeconf$insertMatchingButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                Component.translatable("gui.stacksizeconf.aggregate.insert_matching.tooltip")));
         stacksizeconf$refreshSortButtonState();
     }
 
